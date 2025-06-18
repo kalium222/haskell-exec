@@ -29,10 +29,21 @@ localMaxima :: [Integer] -> [Integer]
 localMaxima l = [ y | (x, y, z) <- zip3 l (drop 1 l) (drop 2 l), x < y, z < y ]
 
 -- Ex. 3
--- TODO:
 histogram :: [Integer] -> String
 histogram l =
     let
-        bar = "\n==========\n0123456789\n"
+        bar = "==========\n0123456789\n"
+
+        count :: Eq a => [a] -> a -> Integer
+        count l_ n = foldr (\x y->if x==n then y+1 else y) 0 l_
+
+        count_table = [ count l x | x<-[0..9]]
+        getGraphLine = map (\x->if x>(0::Integer) then '*' else ' ')
+
+        recur_helper :: [Integer] -> [String]
+        recur_helper l_
+            | maximum l_ == 0 = []
+            | otherwise = getGraphLine l_ : recur_helper (map (\x->x-1) l_)
     in
-        "    *     " ++ bar
+        (unlines . reverse . recur_helper) count_table ++ bar
+
