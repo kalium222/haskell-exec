@@ -43,7 +43,9 @@ histogram l =
         recur_helper :: [Integer] -> [String]
         recur_helper l_
             | maximum l_ == 0 = []
-            | otherwise = getGraphLine l_ : recur_helper (map (\x->x-1) l_)
+            | otherwise = getGraphLine l_ : recur_helper (map (+(-1)) l_)
+            -- NOTE: cannot write (+(-1)) as (-1),
+            -- because the latter one is a intager
     in
         (unlines . reverse . recur_helper) count_table ++ bar
 
