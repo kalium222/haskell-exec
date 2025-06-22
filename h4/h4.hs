@@ -68,3 +68,17 @@ isBalanceTree (Node _ l _ r) =
     in
         -1 <= delta && delta <= 1
         && isBalanceTree l && isBalanceTree r
+
+-- Ex. 3
+xor :: [Bool] -> Bool
+xor = foldr (\x res-> if x then not res else res) False
+
+map' :: (a->b) -> [a] -> [b]
+map' f = foldr (\x res-> f x : res) []
+
+-- NOTE: 这是人？
+foldl'' :: (a->b->a) -> a -> [b] -> a
+foldl'' f base xs = h base
+    where
+        -- h = foldr (\x acc->(\a->acc (f a x))) id xs
+        h = foldr (\ x acc a -> acc (f a x)) id xs
