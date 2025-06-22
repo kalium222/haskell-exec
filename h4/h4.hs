@@ -1,3 +1,4 @@
+import Data.List (foldl')
 -- Ex. 1
 fun1 :: [Integer] -> Integer
 fun1 [] = 1
@@ -23,7 +24,47 @@ fun2' =
             | even x = x : getSequence (div x 2)
             | otherwise = x : getSequence (3 * x + 1)
     in
-        sum . filter even . getSequence 
+        sum . filter even . getSequence
 
 -- Ex. 2
+data Tree a = Leaf
+            | Node Integer (Tree a) a (Tree a)
+    deriving (Show, Eq)
 
+foldTree :: [a] -> Tree a
+foldTree = foldl' insert Leaf
+
+height :: Tree a -> Integer
+height Leaf = -1
+height (Node h _ _ _) = h
+
+insert :: Tree a -> a -> Tree a
+insert Leaf x = Node 0 Leaf x Leaf
+insert (Node h l_tree val r_tree) x
+    | height l_tree >= height r_tree =
+        let
+            r_tree' = insert r_tree x
+            h' = 1 + max (height l_tree) (height r_tree')
+        in
+            Node h' l_tree val r_tree'
+    | otherwise =
+        let
+            l_tree' = insert l_tree x
+            h' = 1 + max (height l_tree') (height r_tree)
+        in
+            Node h' l_tree' val r_tree
+
+recurHeight :: Tree a -> Integer
+recurHeight Leaf = -1
+recurHeight (Node _ l _ r) = max (recurHeight l) (recurHeight r) + 1
+
+isBalanceTree :: Tree a -> Bool
+isBalanceTree Leaf = True
+isBalanceTree (Node _ l _ r) =
+    let
+        h_l = recurHeight l
+        h_r = recurHeight r
+        delta = h_l - h_r
+    in
+        -1 <= delta && delta <= 1
+        && isBalanceTree l && isBalanceTree r
