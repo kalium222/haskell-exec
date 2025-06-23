@@ -82,3 +82,12 @@ foldl'' f base xs = h base
     where
         -- h = foldr (\x acc->(\a->acc (f a x))) id xs
         h = foldr (\ x acc a -> acc (f a x)) id xs
+
+-- Ex. 4
+-- NOTE: ?
+sieveSundaram :: Integer -> [Integer]
+sieveSundaram n =
+    let
+        l = [ i+j+2*i*j | j<-[1..n], i<-[1..j] ]
+    in
+        map (\x->2*x+1) (filter (`notElem` l) [1..n])
