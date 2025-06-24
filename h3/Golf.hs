@@ -19,33 +19,31 @@ skips :: [a] -> [[a]]
 
 -- NOTE: short version
 -- 就离谱
-skips l = [ [ e | (i, e) <- zip [1..] l, i `mod` n == 0 ] | n <- [1..length l]]
+skips l = [[e | (i, e) <- zip [1 ..] l, i `mod` n == 0] | n <- [1 .. length l]]
 
 -- Ex. 2
 localMaxima :: [Integer] -> [Integer]
 -- localMaxima l = [ l!!n | n<-[1..(length l-2)], l!!(n-1)<l!!n, l!!(n+1)<l!!n ]
 -- NOTE: without (!!)
 -- 就离谱
-localMaxima l = [ y | (x, y, z) <- zip3 l (drop 1 l) (drop 2 l), x < y, z < y ]
+localMaxima l = [y | (x, y, z) <- zip3 l (drop 1 l) (drop 2 l), x < y, z < y]
 
 -- Ex. 3
 histogram :: [Integer] -> String
 histogram l =
-    let
-        bar = "==========\n0123456789\n"
+  let bar = "==========\n0123456789\n"
 
-        count :: Eq a => [a] -> a -> Integer
-        count l_ n = foldr (\x y->if x==n then y+1 else y) 0 l_
+      count :: Eq a => [a] -> a -> Integer
+      count l_ n = foldr (\x y -> if x == n then y + 1 else y) 0 l_
 
-        count_table = [ count l x | x<-[0..9]]
-        getGraphLine = map (\x->if x>(0::Integer) then '*' else ' ')
+      count_table = [count l x | x <- [0 .. 9]]
+      getGraphLine = map (\x -> if x > (0 :: Integer) then '*' else ' ')
 
-        recur_helper :: [Integer] -> [String]
-        recur_helper l_
-            | maximum l_ == 0 = []
-            | otherwise = getGraphLine l_ : recur_helper (map (+(-1)) l_)
-            -- NOTE: cannot write (+(-1)) as (-1),
-            -- because the latter one is a intager
-    in
-        (unlines . reverse . recur_helper) count_table ++ bar
+      recur_helper :: [Integer] -> [String]
+      recur_helper l_
+        | maximum l_ == 0 = []
+        | otherwise = getGraphLine l_ : recur_helper (map (+ (-1)) l_)
+   in -- NOTE: cannot write (+(-1)) as (-1),
+      -- because the latter one is a intager
 
+      (unlines . reverse . recur_helper) count_table ++ bar
