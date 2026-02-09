@@ -3,3 +3,5 @@
 !*.hs
 !*.log
 !.gitignore
+!*.nix
+!*.lock
