@@ -1,4 +1,5 @@
 import Sized
+import Scrabble (Score, scoreString)
 
 data JoinList m a
   = Empty
@@ -55,5 +56,7 @@ takeJ i (Append _ jl1 jl2)
 
 -- test
 node a = Single (Size 1) a
-
 tree = (node 'f' +++ node 'u') +++ (node 'c' +++ node 'k')
+
+scoreLine :: String -> JoinList Score String
+scoreLine s = Single (scoreString s) s
