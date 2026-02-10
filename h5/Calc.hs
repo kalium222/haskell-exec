@@ -19,12 +19,12 @@ class Expr a where
   mul :: a -> a -> a
 
 instance Expr ExprT where
-  lit = Lit
+  lit = ExprT.Lit
   add = ExprT.Add
   mul = ExprT.Mul
 
 -- Ex. 4
-testExp :: Expr a => Maybe a
+testExp :: (Expr a) => Maybe a
 testExp = parseExp lit add mul "(3* -4) + 5"
 
 newtype MinMax = MinMax Integer deriving (Eq, Show)
