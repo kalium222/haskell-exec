@@ -32,9 +32,15 @@ first :: (a -> b) -> (a, c) -> (b, c)
 first f (a, c) = (f a, c)
 
 instance Functor Parser where
+  -- WARNING: THIS IS FUCKING HARD TO READ
+  -- fmap a2b (Parser runParser_a) = Parser runParser_b
+  --   where
+  --     runParser_b = fmap (first a2b) . runParser_a
   fmap a2b (Parser runParser_a) = Parser runParser_b
     where
-      runParser_b = fmap (first a2b) . runParser_a
+      runParser_b str = case runParser_a str of
+        Nothing -> Nothing
+        Just (a, str') -> Just (a2b a, str')
 
 -- Ex.2
 instance Applicative Parser where
@@ -44,6 +50,62 @@ instance Applicative Parser where
       idk_whatisit str =
         case runParser_a2b str of
           Nothing -> Nothing
-          Just (a2b, output1) -> case runParser_a output1 of
+          Just (a2b, str') -> case runParser_a str' of
             Nothing -> Nothing
-            Just (a, output2) -> Just (a2b a, output2)
+            Just (a, str'') -> Just (a2b a, str'')
+
+{--
+    NOTE: Example:
+    data Employee = Emp {name::Name, phone::String}
+    if we have
+    parseName :: Parser Name
+    parsePhone :: Parser Phone
+    then we can have
+    Emp <$> parseName <*> parserPhone :: Parser Employee
+
+    HACK:
+    because Emp :: Name -> String -> Employee
+    Emp <$> parseName :: (Name -> String -> Employee) <$> Parser Name
+    :: Parser (String -> Employee)
+    here we can check what it is:
+    Emp <$> parseName
+    = fmap Emp (Parser runParser_a) = Parser runParser_b
+        where
+          runParser_b str = case runParser_a str of
+            Nothing -> Nothing
+            Just (a, str') -> Just (Emp a, str')
+
+    HACK:
+    and after this, where `<*> parserPhone`, will apply `Emp a`
+    to remaining phone, in line 26
+--}
+
+-- Ex.3
+-- TODO: find out about *>, <*, $>, <$, <|>
+abParser :: Parser (Char, Char)
+abParser = (,) <$> char 'a' <*> char 'b'
+
+abParser_ :: Parser ()
+-- abParser_ = (\x y -> ()) <$> (char 'a') <*> (char 'b')
+abParser_ = char 'a' *> char 'b' *> pure ()
+
+intPair :: Parser [Integer]
+intPair = (\x _ y -> [x, y]) <$> posInt <*> (char ' ') <*> posInt
+
+-- Ex.4
+instance Alternative Parser where
+  empty = Parser (\_ -> Nothing)
+
+  -- NOTE: long
+  -- (Parser runParser_a) <|> (Parser runParser_b) = Parser f
+  --   where
+  --     f str = case runParser_a str of
+  --       res@(Just _) -> res
+  --       Nothing -> runParser_b str
+  Parser p1 <|> Parser p2 = Parser (\str -> p1 str <|> p2 str)
+
+-- Ex. 5
+intOrUppercase :: Parser ()
+intOrUppercase = (posInt *> pure ()) <|> (satisfy isUpper *> pure ())
+
+-- WARNING: I dont fucking know what shit it is

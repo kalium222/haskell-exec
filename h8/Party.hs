@@ -11,6 +11,7 @@ glCons e (GL l fun) = GL (e : l) (fun + empFun e)
 -- 2.
 instance Semigroup GuestList where
   -- NOTE: try not to get a correct `fun` first
+  -- NOTE: yes, this is exactly what we should do
   (GL es1 f1) <> (GL es2 f2) = GL (es1 ++ es2) (f1 + f2)
 
 instance Monoid GuestList where
