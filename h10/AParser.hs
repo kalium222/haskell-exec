@@ -38,5 +38,12 @@ instance Functor Parser where
 
 -- Ex.2
 instance Applicative Parser where
-  pure = undefined
-  (<*>) = undefined
+  pure a = Parser (\s -> Just (a, s))
+  (Parser runParser_a2b) <*> (Parser runParser_a) = Parser idk_whatisit
+    where
+      idk_whatisit str =
+        case runParser_a2b str of
+          Nothing -> Nothing
+          Just (a2b, output1) -> case runParser_a output1 of
+            Nothing -> Nothing
+            Just (a, output2) -> Just (a2b a, output2)
