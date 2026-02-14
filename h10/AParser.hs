@@ -2,6 +2,7 @@ module AParser where
 
 import Control.Applicative
 import Data.Char
+import Data.Functor
 
 newtype Parser a = Parser {runParser :: String -> Maybe (a, String)}
 
@@ -32,27 +33,40 @@ first :: (a -> b) -> (a, c) -> (b, c)
 first f (a, c) = (f a, c)
 
 instance Functor Parser where
-  -- WARNING: THIS IS FUCKING HARD TO READ
+  -- NOTE: init version:
+  -- in this version, we handled Maybe by hand
   -- fmap a2b (Parser runParser_a) = Parser runParser_b
   --   where
-  --     runParser_b = fmap (first a2b) . runParser_a
+  --     runParser_b str = case runParser_a str of
+  --       Nothing -> Nothing
+  --       Just (a, str') -> Just (a2b a, str')
   fmap a2b (Parser runParser_a) = Parser runParser_b
     where
-      runParser_b str = case runParser_a str of
-        Nothing -> Nothing
-        Just (a, str') -> Just (a2b a, str')
+      runParser_b str = first a2b <$> (runParser_a str)
+
+-- NOTE: or,
+-- fmap a2b (Parser run_a) = Parser (fmap (first a2b) . run_a)
 
 -- Ex.2
 instance Applicative Parser where
   pure a = Parser (\s -> Just (a, s))
-  (Parser runParser_a2b) <*> (Parser runParser_a) = Parser idk_whatisit
-    where
-      idk_whatisit str =
-        case runParser_a2b str of
-          Nothing -> Nothing
-          Just (a2b, str') -> case runParser_a str' of
-            Nothing -> Nothing
-            Just (a, str'') -> Just (a2b a, str'')
+
+  -- NOTE: init version:
+  -- in this version, we handled Maybe by hand
+  -- but we can see that `Just (a2b a, str'')` very clearly
+  -- (Parser runParser_a2b) <*> (Parser runParser_a) = Parser idk_whatisit
+  --   where
+  --     idk_whatisit str =
+  --       case runParser_a2b str of
+  --         Nothing -> Nothing
+  --         Just (a2b, str') -> case runParser_a str' of
+  --           Nothing -> Nothing
+  --           Just (a, str'') -> Just (a2b a, str'')
+
+  (Parser runParser_a2b) <*> parser_a = Parser $ \str ->
+    case runParser_a2b str of
+      Nothing -> Nothing
+      Just (a2b, str') -> runParser (fmap a2b parser_a) str'
 
 {--
     NOTE: Example:
@@ -81,16 +95,41 @@ instance Applicative Parser where
 --}
 
 -- Ex.3
--- TODO: find out about *>, <*, $>, <$, <|>
+-- NOTE: find out about *>, <*, $>, <$, <|>
 abParser :: Parser (Char, Char)
 abParser = (,) <$> char 'a' <*> char 'b'
 
 abParser_ :: Parser ()
--- abParser_ = (\x y -> ()) <$> (char 'a') <*> (char 'b')
-abParser_ = char 'a' *> char 'b' *> pure ()
+abParser_ = (\x y -> ()) <$> (char 'a') <*> (char 'b')
+
+-- NOTE:
+-- f a *> f b -> f b
+-- work as `f b`, but keep the logic of `f` of `f a`
+-- <* is similar as it
+abParser_' :: Parser ()
+abParser_' = char 'a' *> char 'b' *> pure ()
+
+-- NOTE:
+-- a1 <$ f a2 -> f a1
+-- keep the logif of `f` of `f a2`
+-- then `fmap (const a1) (f a2) => f a1`
+-- see definition of <$
+abParser_'' :: Parser ()
+abParser_'' = () <$ char 'a' <* char 'b'
+
+-- Or use $> in Data.Functor
+abParser_''' :: Parser ()
+abParser_''' = char 'a' *> char 'b' $> ()
 
 intPair :: Parser [Integer]
 intPair = (\x _ y -> [x, y]) <$> posInt <*> (char ' ') <*> posInt
+
+intPair' :: Parser [Integer]
+intPair' = (\x y -> [x, y]) <$> posInt <* (char ' ') <*> posInt
+
+-- NOTE: need to know how sequenceA of [] is defined
+intPair'' :: Parser [Integer]
+intPair'' = sequenceA [posInt, char ' ' *> posInt]
 
 -- Ex.4
 instance Alternative Parser where
@@ -106,6 +145,18 @@ instance Alternative Parser where
 
 -- Ex. 5
 intOrUppercase :: Parser ()
-intOrUppercase = (posInt *> pure ()) <|> (satisfy isUpper *> pure ())
+intOrUppercase = (posInt $> ()) <|> (satisfy isUpper $> ())
 
 -- WARNING: I dont fucking know what shit it is
+--
+-- WARNING: I fucking understand now!
+
+-- Functor:
+-- (<$)        :: a -> f b -> f a
+-- (<$)        =  fmap . const
+--
+-- Applicative:
+-- (*>) :: f a -> f b -> f b
+-- a1 *> a2 = (id <$ a1) <*> a2
+-- (<*) :: f a -> f b -> f a
+-- (<*) = liftA2 const
