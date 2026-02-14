@@ -6,26 +6,33 @@ module SExpr where
 
 import AParser
 import Control.Applicative
+import Data.Char (isAlpha, isAlphaNum, isSpace)
 
 ------------------------------------------------------------
 --  1. Parsing repetitions
 ------------------------------------------------------------
 
+-- NOTE: 离谱
 zeroOrMore :: Parser a -> Parser [a]
-zeroOrMore p = undefined
+zeroOrMore p = (oneOrMore p) <|> pure []
 
 oneOrMore :: Parser a -> Parser [a]
-oneOrMore p = undefined
+oneOrMore p = liftA2 (:) p (zeroOrMore p)
 
 ------------------------------------------------------------
 --  2. Utilities
 ------------------------------------------------------------
 
 spaces :: Parser String
-spaces = undefined
+-- NOTE: this only parse ' ',
+-- while the isSpace also parse `\t`, `\n`
+-- spaces = zeroOrMore $ char ' '
+spaces = zeroOrMore $ satisfy isSpace
 
 ident :: Parser String
-ident = undefined
+-- NOTE: we only need the first char is Alpha
+-- ident = liftA2 (++) (oneOrMore $ satisfy isAlpha) (zeroOrMore $ satisfy isAlphaNum)
+ident = liftA2 (:) (satisfy isAlpha) (zeroOrMore $ satisfy isAlphaNum)
 
 ------------------------------------------------------------
 --  3. Parsing S-expressions
