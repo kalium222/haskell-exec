@@ -52,3 +52,12 @@ data SExpr
   = A Atom
   | Comb [SExpr]
   deriving (Show)
+
+-- Ex. 3
+atom_parser :: Parser SExpr
+atom_parser = spaces *> (A . I <$> ident <|> A . N <$> posInt) <* spaces
+
+comb_parser :: Parser SExpr
+comb_parser = spaces *> char '(' *> (Comb <$> zeroOrMore s_expr_parser) <* char ')' <* spaces
+
+s_expr_parser = atom_parser <|> comb_parser
