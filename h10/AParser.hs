@@ -63,10 +63,14 @@ instance Applicative Parser where
   --           Nothing -> Nothing
   --           Just (a, str'') -> Just (a2b a, str'')
 
+  -- (Parser runParser_a2b) <*> parser_a = Parser $ \str ->
+  --   case runParser_a2b str of
+  --     Nothing -> Nothing
+  --     Just (a2b, str') -> runParser (fmap a2b parser_a) str'
+
+  -- nobody ain know di shiii!
   (Parser runParser_a2b) <*> parser_a = Parser $ \str ->
-    case runParser_a2b str of
-      Nothing -> Nothing
-      Just (a2b, str') -> runParser (fmap a2b parser_a) str'
+    runParser_a2b str >>= \(a2b, str') -> runParser (a2b <$> parser_a) str'
 
 {--
     NOTE: Example:
