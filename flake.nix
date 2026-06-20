@@ -1,23 +1,25 @@
 {
-  description = "A Nix-flake-based Haskell development environment";
-
-  inputs.nixpkgs.url = "https://flakehub.com/f/NixOS/nixpkgs/0.1"; # unstable Nixpkgs
-
+  description = "haskell";
+  inputs.nixpkgs.url = "nixpkgs";
   outputs =
     { self, ... }@inputs:
     let
-      pkgs = import inputs.nixpkgs { system = "x86_64-linux"; };
+      system = "x86_64-linux";
+      pkgs = import inputs.nixpkgs { inherit system; };
     in
     {
       devShells = {
         x86_64-linux = {
           default = pkgs.mkShellNoCC {
+            name = "haskell";
             packages = with pkgs; [
               cabal-install
               ghc
               haskell-language-server
             ];
-            shellHook = "exec zsh";
+            shellHook = ''
+              [ -x /bin/zsh ] && { export SHELL=/bin/zsh; exec zsh; }
+            '';
           };
         };
       };
