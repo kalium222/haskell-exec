@@ -14,7 +14,9 @@
             name = "haskell";
             packages = with pkgs; [
               cabal-install
-              ghc
+              (haskellPackages.ghcWithPackages (ps: with ps; [
+                MonadRandom
+              ]))
               haskell-language-server
             ];
             shellHook = ''
